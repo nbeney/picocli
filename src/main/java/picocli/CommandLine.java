@@ -2506,7 +2506,7 @@ public class CommandLine {
          * </p>
          * @return one or more option names
          */
-        String[] names();
+        String names();
 
         /**
          * Indicates whether this option is required. By default this is false.
@@ -2597,7 +2597,7 @@ public class CommandLine {
          * </p>
          * @return the description of this option
          */
-        String[] description() default {};
+        String description() default "";
 
         /**
          * Specifies the minimum number of required parameters and the maximum number of accepted parameters.
@@ -2820,7 +2820,7 @@ public class CommandLine {
          * </p>
          * @return the description of the parameter(s)
          */
-        String[] description() default {};
+        String description() default "";
 
         /**
          * Specifies the minimum number of required parameters and the maximum number of accepted parameters. If a
@@ -3102,7 +3102,7 @@ public class CommandLine {
         /** Alternative command names by which this subcommand is recognized on the command line.
          * @return one or more alternative command names
          * @since 3.1 */
-        String[] aliases() default {};
+        String aliases() default "";
 
         /** A list of classes to instantiate and register as subcommands. When registering subcommands declaratively
          * like this, you don't need to call the {@link CommandLine#addSubcommand(String, Object)} method. For example, this:
@@ -3251,7 +3251,7 @@ public class CommandLine {
          * <p>May contain embedded {@linkplain java.util.Formatter format specifiers} like {@code %n} line separators. Literal percent {@code '%'} characters must be escaped with another {@code %}.</p>
          * @return description of this command
          * @see Help#description(Object...) */
-        String[] description() default {};
+        String description() default "";
 
         /** Set the heading preceding the parameters list.
          * <p>May contain embedded {@linkplain java.util.Formatter format specifiers} like {@code %n} line separators. Literal percent {@code '%'} characters must be escaped with another {@code %}.</p>
@@ -4412,7 +4412,9 @@ public class CommandLine {
              * @return this CommandSpec for method chaining
              * @since 3.1 */
             public CommandSpec aliases(String... aliases) {
-                this.aliases = new LinkedHashSet<String>(Arrays.asList(aliases == null ? new String[0] : aliases));
+                if (aliases.length >= 1 && aliases[0].length() > 0) {
+                    this.aliases = new LinkedHashSet<String>(Arrays.asList(aliases == null ? new String[0] : aliases));
+                }
                 return this;
             }
 
@@ -4480,7 +4482,7 @@ public class CommandLine {
             public void updateCommandAttributes(Command cmd, IFactory factory) {
                 parser().updateSeparator(interpolator.interpolate(cmd.separator()));
 
-                aliases(cmd.aliases());
+                aliases(cmd.aliases().split(",\\s+"));
                 updateName(cmd.name());
                 updateVersion(cmd.version());
                 updateHelpCommand(cmd.helpCommand());
@@ -5090,7 +5092,7 @@ public class CommandLine {
                 if (isNonDefault(cmd.showDefaultValues(), DEFAULT_SHOW_DEFAULT_VALUES))       {showDefaultValues = cmd.showDefaultValues();}
                 if (isNonDefault(cmd.hidden(), DEFAULT_HIDDEN))                               {hidden = cmd.hidden();}
                 if (isNonDefault(cmd.customSynopsis(), DEFAULT_MULTI_LINE))                   {customSynopsis = cmd.customSynopsis().clone();}
-                if (isNonDefault(cmd.description(), DEFAULT_MULTI_LINE))                      {description = cmd.description().clone();}
+                if (isNonDefault(cmd.description(), DEFAULT_SINGLE_VALUE))                    {description = new String[] {cmd.description()};}
                 if (isNonDefault(cmd.descriptionHeading(), DEFAULT_SINGLE_VALUE))             {descriptionHeading = cmd.descriptionHeading();}
                 if (isNonDefault(cmd.header(), DEFAULT_MULTI_LINE))                           {header = cmd.header().clone();}
                 if (isNonDefault(cmd.headerHeading(), DEFAULT_SINGLE_VALUE))                  {headerHeading = cmd.headerHeading();}
@@ -5884,7 +5886,7 @@ public class CommandLine {
 
                     hideParamSyntax = option.hideParamSyntax();
                     interactive = option.interactive();
-                    description = option.description();
+                    description = new String[] {option.description()};
                     descriptionKey = option.descriptionKey();
                     splitRegex = option.split();
                     hidden = option.hidden();
@@ -5910,7 +5912,7 @@ public class CommandLine {
 
                         hideParamSyntax = parameters.hideParamSyntax();
                         interactive = parameters.interactive();
-                        description = parameters.description();
+                        description = new String[] {parameters.description()};
                         descriptionKey = parameters.descriptionKey();
                         splitRegex = parameters.split();
                         hidden = parameters.hidden();
@@ -6302,7 +6304,7 @@ public class CommandLine {
                 private Builder(IAnnotatedElement member, IFactory factory) {
                     super(member.getAnnotation(Option.class), member, factory);
                     Option option = member.getAnnotation(Option.class);
-                    names = option.names();
+                    names = option.names().split(",\\s+");
                     help = option.help();
                     usageHelp = option.usageHelp();
                     versionHelp = option.versionHelp();
@@ -10376,11 +10378,11 @@ public class CommandLine {
     static class AutoHelpMixin {
         private static final String KEY = "mixinStandardHelpOptions";
 
-        @Option(names = {"${picocli.help.name.0:--h}", "${picocli.help.name.1:---help}"}, usageHelp = true, descriptionKey = "mixinStandardHelpOptions.help",
+        @Option(names = "${picocli.help.name.0:--h}, ${picocli.help.name.1:---help}", usageHelp = true, descriptionKey = "mixinStandardHelpOptions.help",
                 description = "Show this help message and exit.")
         private boolean helpRequested;
 
-        @Option(names = {"${picocli.version.name.0:--V}", "${picocli.version.name.1:---version}"}, versionHelp = true, descriptionKey = "mixinStandardHelpOptions.version",
+        @Option(names = "${picocli.version.name.0:--V}, ${picocli.version.name.1:---version}", versionHelp = true, descriptionKey = "mixinStandardHelpOptions.version",
                 description = "Print version information and exit.")
         private boolean versionRequested;
     }
@@ -10403,11 +10405,10 @@ public class CommandLine {
      */
     @Command(name = "help", header = "Displays help information about the specified command",
             synopsisHeading = "%nUsage: ", helpCommand = true,
-            description = {"%nWhen no COMMAND is given, the usage help for the main command is displayed.",
-                    "If a COMMAND is specified, the help for that command is shown.%n"})
+            description = "%nWhen no COMMAND is given, the usage help for the main command is displayed.%nIf a COMMAND is specified, the help for that command is shown.%n")
     public static final class HelpCommand implements IHelpCommandInitializable, Runnable {
 
-        @Option(names = {"-h", "--help"}, usageHelp = true, descriptionKey = "helpCommand.help",
+        @Option(names = "-h, --help", usageHelp = true, descriptionKey = "helpCommand.help",
                 description = "Show usage help for the help command and exit.")
         private boolean helpRequested;
 

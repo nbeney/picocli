@@ -103,30 +103,30 @@ public class AutoComplete {
                 "@Command class to generate a completion script for.")
         String commandLineFQCN;
 
-        @Option(names = {"-c", "--factory"}, description = "Optionally specify the fully qualified class name of the custom factory to use to instantiate the command class. " +
+        @Option(names = "-c, --factory", description = "Optionally specify the fully qualified class name of the custom factory to use to instantiate the command class. " +
                 "When omitted, the default picocli factory is used.")
         String factoryClass;
 
-        @Option(names = {"-n", "--name"}, description = "Optionally specify the name of the command to create a completion script for. " +
+        @Option(names = "-n, --name", description = "Optionally specify the name of the command to create a completion script for. " +
                 "When omitted, the annotated class @Command 'name' attribute is used. " +
                 "If no @Command 'name' attribute exists, '<CLASS-SIMPLE-NAME>' (in lower-case) is used.")
         String commandName;
 
-        @Option(names = {"-o", "--completionScript"},
+        @Option(names = "-o, --completionScript",
                 description = "Optionally specify the path of the completion script file to generate. " +
                         "When omitted, a file named '<commandName>_completion' " +
                         "is generated in the current directory.")
         File autoCompleteScript;
 
-        @Option(names = {"-w", "--writeCommandScript"},
+        @Option(names = "-w, --writeCommandScript",
                 description = "Write a '<commandName>' sample command script to the same directory " +
                         "as the completion script.")
         boolean writeCommandScript;
 
-        @Option(names = {"-f", "--force"}, description = "Overwrite existing script files.")
+        @Option(names = "-f, --force", description = "Overwrite existing script files.")
         boolean overwriteIfExists;
 
-        @Option(names = { "-h", "--help"}, usageHelp = true, description = "Display this help message and quit.")
+        @Option(names = "-h, --help", usageHelp = true, description = "Display this help message and quit.")
         boolean usageHelpRequested;
 
         public Integer call() {
